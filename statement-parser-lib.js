@@ -51,8 +51,8 @@
     currentTransactionDate = '';
 
     // get the statement year from the filename
-    // var statementFileNameDelimiter = 'Statement_'; // e.g. Statement_20140807.pdf
-    // statementYear = fileName.substr(fileName.lastIndexOf(statementFileNameDelimiter)+statementFileNameDelimiter.length,4);
+    var statementFileNameDelimiter = 'Statement_'; // e.g. Statement_20140807.pdf
+    statementYear = fileName.substr(fileName.lastIndexOf(statementFileNameDelimiter)+statementFileNameDelimiter.length,4);
 
     // Will be using promises to load document, pages and misc data instead of
     // callback.
@@ -132,7 +132,9 @@
             var text = strings.join('');
             if (pageNum === 1) {
               years = dateRangeMarker.exec(text);
-              statementYear = '' + years[1];
+              if (years) {
+                statementYear = '' + years[1];
+              }
               console.log('start year', statementYear);
             }
             // console.info(text);
@@ -174,7 +176,10 @@
     "On-line Banking bill payment to",
     "Commission charges",
     "Standing order to",
-    "Cash machine withdrawal"
+    "Cash machine withdrawal",
+    "Interest charged",
+    "AFTS payment",
+    "To account"
   ];
   var receipts = [
     "Direct credit from",
@@ -182,7 +187,9 @@
     "Internet Banking transfer from",
     "Deposit", // NB: not sure this is a generic reference
     "Refund from",
-    "AFTS receipt from"
+    "AFTS receipt from",
+    "From account",
+    "Receipt re Refund of Charge"
   ];
   var transactionsStart = 'Transactions in date order\\nDate\tDescription\tPayments\tReceipts\tBalance';
   /*
@@ -245,6 +252,7 @@
         transactionDirection = 1; // it is an incoming transaction
       }
       transactionAmount = transactionAmount*transactionDirection;
+      console.log('transaction', transactionAmount)
       // if transaction has a date, add the statement year and update the currently set transaction date
       // if the transaction has no date, use currently set transaction date
       if(transactionDate) {
@@ -254,9 +262,7 @@
         if (lastMonth && thisMonth) {
           if (lastMonth[1] === 'Dec' && thisMonth[1] === 'Jan') {
             statementYear = parseInt(statementYear) + 1;
-
           }
-          console.log('months', lastMonth[1], thisMonth[1]);
         }
         transactionDate += ' '+statementYear;
         currentTransactionDate = transactionDate;
