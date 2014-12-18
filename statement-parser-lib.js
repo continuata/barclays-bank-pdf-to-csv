@@ -2,8 +2,6 @@
 // `node make singlefile` before running the example.
 //
 
-// TO-DO: doesn't get the year right when the statement covers two years e.g. the statement is dated January 2014 but contains transactions from December 2013
-
 (function() {
 
   var isBrowser = typeof window!=='undefined';
@@ -35,6 +33,7 @@
       totalReceiptsFromTransactions,
       transactions,
       currentTransactionDate,
+      years,
       statementYear;
 
   /*
@@ -52,8 +51,8 @@
     currentTransactionDate = '';
 
     // get the statement year from the filename
-    var statementFileNameDelimiter = 'Statement_'; // e.g. Statement_20140807.pdf
-    statementYear = fileName.substr(fileName.lastIndexOf(statementFileNameDelimiter)+statementFileNameDelimiter.length,4);
+    // var statementFileNameDelimiter = 'Statement_'; // e.g. Statement_20140807.pdf
+    // statementYear = fileName.substr(fileName.lastIndexOf(statementFileNameDelimiter)+statementFileNameDelimiter.length,4);
 
     // Will be using promises to load document, pages and misc data instead of
     // callback.
@@ -131,7 +130,12 @@
             });
             console.info('## Text Content');
             var text = strings.join('');
-            console.info(text);
+            if (pageNum === 1) {
+              years = dateRangeMarker.exec(text);
+              statementYear = '' + years[1];
+              console.log('start year', statementYear);
+            }
+            // console.info(text);
             processStatement(text, pageNum);
             console.info('# Transactions analysed');
           }).then(function () {
@@ -195,6 +199,9 @@
   var trailingBalanceMarker = '(?:[\\d,]+\\.\\d\\d)?'; // some transactions are followed by balances that can interfere a subsequent date e.g. 'Direct credit from G Kirschner Ref:-KirschnerBooking306.004,109.18' followed by '7 FebDebit card payment...'
   var transactionSeparator = new RegExp(optionalDateMarker+'(('+paymentsMarkers+'|'+receiptsMarkers+').+?)('+amountMarker+')'+trailingBalanceMarker,'g');
   var totalsMarker = new RegExp('Total payments - incl\\.\\\\ncommission & interest('+amountMarker+').+?Total receipts('+amountMarker+')');
+  var dateRangeMarker = new RegExp('Statement for \\d{1,2} [a-zA-z]{3} (\\d{4}) - \\d{1,2} [a-zA-z]{3} (\\d{4})');
+  var monthMarker = new RegExp('\\d{1,2} ([a-zA-z]{3}) \\d{4}');
+
   //console.info('transaction separator',transactionSeparator);
 
   function processStatement(text, pageNum) {
@@ -241,7 +248,16 @@
       // if transaction has a date, add the statement year and update the currently set transaction date
       // if the transaction has no date, use currently set transaction date
       if(transactionDate) {
-        //console.info('transaction date is set to',transactionDate);
+        // console.info('transaction date is set to',transactionDate);
+        lastMonth = monthMarker.exec(currentTransactionDate);
+        thisMonth = monthMarker.exec(transactionDate+' '+statementYear);
+        if (lastMonth && thisMonth) {
+          if (lastMonth[1] === 'Dec' && thisMonth[1] === 'Jan') {
+            statementYear = parseInt(statementYear) + 1;
+
+          }
+          console.log('months', lastMonth[1], thisMonth[1]);
+        }
         transactionDate += ' '+statementYear;
         currentTransactionDate = transactionDate;
       } else {
