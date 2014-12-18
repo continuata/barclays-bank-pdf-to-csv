@@ -177,7 +177,8 @@
     "Debit card refund from",
     "Internet Banking transfer from",
     "Deposit", // NB: not sure this is a generic reference
-    "Refund from"
+    "Refund from",
+    "AFTS receipt from"
   ];
   var transactionsStart = 'Transactions in date order\\nDate\tDescription\tPayments\tReceipts\tBalance';
   /*
